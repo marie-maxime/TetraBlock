@@ -1,5 +1,3 @@
-"use strict";
-
 ////////////////////////////////
 //       EcranInstruction     //
 ////////////////////////////////
@@ -10,6 +8,7 @@
  * pour la scène d'instruction du jeu
  */
 
+var TetraBloc = window.TetraBloc;
 
 TetraBloc.Instruction = function Instruction(leJeu) {
     //Le score actuel du jeu

@@ -1,5 +1,3 @@
-"use strict";
-
 ////////////////////////////////
 //        Demarrage           //
 ////////////////////////////////
@@ -9,6 +7,7 @@
  * pour ajuster certains paramètres au début du jeu
  */
 
+var TetraBloc = window.TetraBloc;
 
 TetraBloc.Demarrage = function(leJeu) {};
 

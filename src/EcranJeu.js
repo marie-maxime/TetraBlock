@@ -1,5 +1,3 @@
-"use strict";
-
 ////////////////////////////////
 //          EcranJeu         //
 ////////////////////////////////
@@ -9,6 +7,7 @@
 * pour la scène du jeu...
 */
 
+var TetraBloc = window.TetraBloc;
 
 TetraBloc.Jeu = function Jeu(leJeu) {
    //Propriétés de l'écran de jeu
@@ -615,7 +614,7 @@ TetraBloc.Jeu.prototype = {
             break;
       }
       //instacier l'étoile
-      new AnimEtoile(this.game,this.game.width/8,(this.lesCases[noLigne][0].y + (20* TetraBloc.RATIO_ECRAN.vertical)), 0x000000, couleurEtoile);
+      new window.AnimEtoile(this.game,this.game.width/8,(this.lesCases[noLigne][0].y + (20* TetraBloc.RATIO_ECRAN.vertical)), 0x000000, couleurEtoile);
 
       //À chaque 10 lignes détruite, on augemente le niveau et la vitesse de descente des blocs
       if(this.nbLignesDetruitesTotal >= 10 && this.nbLignesDetruitesTotal%10 == 0){
@@ -626,7 +625,7 @@ TetraBloc.Jeu.prototype = {
          //on affiche le niveau dans l'écran
          var laPolice = "bold " + Math.round(50 * TetraBloc.RATIO_ECRAN.moyen) + "px Monospace";
          var style= {font: laPolice,fill: "darkred", align: "center"};
-         new ExplosionPoint(this.game, this.game.width/2.5, this.game.height/3, this.niveauTxt.text, style);
+         new window.ExplosionPoint(this.game, this.game.width/2.5, this.game.height/3, this.niveauTxt.text, style);
       }
       //on met à jour le score
       this.scoreTxt.text = "Score: " + this.score;
@@ -662,7 +661,7 @@ TetraBloc.Jeu.prototype = {
             var tempsRestant = TetraBloc.TEMPS_LIMITE - this.tempsEcoule;
             var laPolice = "bold " + Math.round(60 * TetraBloc.RATIO_ECRAN.moyen) + "px Arial";
             var style= {font: laPolice,fill: "darkred", align: "center"};
-            new ExplosionPoint(this.game, this.game.width/2.5, this.game.height/3,tempsRestant , style);
+            new window.ExplosionPoint(this.game, this.game.width/2.5, this.game.height/3,tempsRestant , style);
          }
       }
    },

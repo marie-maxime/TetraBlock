@@ -1,5 +1,3 @@
-"use strict";
-
 ////////////////////////////////
 //      ChargementMedias      //
 ////////////////////////////////
@@ -8,6 +6,8 @@
 * Classe permettant de définir l'écran (state)
 * pour le chargement des médias
 */
+
+var TetraBloc = window.TetraBloc;
 
 TetraBloc.ChargementMedias = function(leJeu) {
    this.rondelle = null;

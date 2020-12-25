@@ -1,0 +1,39 @@
+{
+  "name": "tetrablock",
+  "version": "1.0.0",
+  "description": "a block puzzle game",
+  "scripts": {
+    "dev": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marie-maxime/TetraBlock.git"
+  },
+  "author": "Marie-Maxime Tanguay <mariemaximetanguay@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marie-maxime/TetraBlock/issues"
+  },
+  "homepage": "https://github.com/marie-maxime/TetraBlock#readme",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4",
+    "parcel-plugin-html-externals": "^0.2.0",
+    "parcel-plugin-static-files-copy": "^2.5.0"
+  },
+  "externals": {
+    "vendor/**/*": false
+  },
+  "staticFiles": {
+    "staticPath": [
+        {
+          "staticPath": "vendor",
+          "staticOutDir": "vendor"
+      },
+      {
+        "staticPath": "medias",
+        "staticOutDir": "medias"
+    }
+    ]
+  }
+}

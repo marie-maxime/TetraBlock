@@ -1,4 +1,3 @@
-//classe perso pour ajouter des étoiles dans le jeu
 (function() { //IFFE
     "use strict";
 

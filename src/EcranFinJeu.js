@@ -1,5 +1,3 @@
-"use strict";
-
 ////////////////////////////////
 //          EcranFinJeu       //
 ////////////////////////////////
@@ -9,6 +7,7 @@
  * pour la scène de la fin du jeu
  */
 
+var TetraBloc = window.TetraBloc;
 
 TetraBloc.FinJeu = function FinJeu(leJeu) {
     //Le score actuel du jeu
