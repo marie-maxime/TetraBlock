@@ -16,6 +16,7 @@ TetraBloc.Jeu = function Jeu(leJeu) {
   this.niveauTxt;
   //les touches
   this.toucheRotation;
+  this.toucheRotationInverse;
 
   //couleurs des pièces
   this.I_BLOC_COULEUR = 0xadd8e6;
@@ -94,6 +95,7 @@ TetraBloc.Jeu.prototype = {
   create: function () {
     //Gestion des flèches et touches du clavier
     this.toucheRotation = this.game.input.keyboard.addKey(Phaser.Keyboard.Z);
+    this.toucheRotationInverse = this.game.input.keyboard.addKey(Phaser.Keyboard.X);
     this.touchePause = this.game.input.keyboard.addKey(Phaser.Keyboard.P);
     this.toucheMettreEnReserve = this.game.input.keyboard.addKey(
       Phaser.Keyboard.SHIFT
@@ -182,6 +184,7 @@ TetraBloc.Jeu.prototype = {
     }
     //faire une rotation en appuyant sur la touche Z
     this.toucheRotation.onDown.add(this.faireRotation, this);
+    this.toucheRotationInverse.onDown.add(this.faireRotationInverse, this);
 
     //on met la pièce en réserve quand on appuie sur SHIFT
     this.toucheMettreEnReserve.onDown.add(this.mettreEnReserve, this);
@@ -1066,6 +1069,63 @@ TetraBloc.Jeu.prototype = {
     }
   },
 
+  faireRotationInverse: function () {
+    if (this.blocActif) {
+      this.game.add.audio("clique").play();
+      //la pièce 2 (le carré) n'a pas de rotation
+      if (this.etatPiece == 2) {
+        return;
+      }
+      //on va chercher les données de la rotation à effectué
+      var valeurRotation = this.objetRotations.getValeurRotation(
+        this.etatPiece
+      );
+      //nombre de bloc de la pièce qui bouge durant la rotation
+      var nbBlocsDansPiece = 3;
+
+      //dans la pièce I, les 4 blocs bougent
+      if (this.etatPiece == 1) {
+        nbBlocsDansPiece = 4;
+      }
+      //la position initiale de chaque bloc est mise à 0
+      for (var i = 0; i < 4; i++) {
+        this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = 0;
+      }
+
+      var rotationInverse = this.etatRotation - 1 === -1 ? 3 : this.etatRotation - 1;
+      //si la condition est vrai, on fait la rotation
+      var condition = this.testerCollisionRotationInverse(
+        valeurRotation,
+        nbBlocsDansPiece,
+        rotationInverse,
+      );
+      if (condition) {
+        //on applique la rotation inverse à la forme
+        
+      
+        for (i = 0; i < nbBlocsDansPiece; i++) {
+          this.laForme[i][0] -= valeurRotation[rotationInverse][0][i];
+          this.laForme[i][1] -= valeurRotation[rotationInverse][1][i];
+        }
+        //on incrémente la rotation
+        this.etatRotation -= 1;
+      }
+      //lorsque la rotation est à 4, on la remet à 0
+      if (this.etatRotation == -1) {
+        this.etatRotation = 3;
+      }
+
+      //on applique les modification dans la matrice du jeu
+      for (var i = 0; i < 4; i++) {
+        this.tableauJeu[this.laForme[i][0]][
+          this.laForme[i][1]
+        ] = this.etatPiece;
+      }
+      //on met à jour le tableau de sprite
+      this.actualiserSprite();
+    }
+  },
+
   //réinitie le tableau passé en paramètre
   reinitialiserMatrice: function (leTableau) {
     for (var i = 0; i < 4; i++) {
@@ -1145,6 +1205,37 @@ TetraBloc.Jeu.prototype = {
     //si le test est bon on retourne true
     return true;
   },
+
+    //fonction pour faire des tests de collisions durant les rotations
+    testerCollisionRotationInverse: function (valeurRotation, nbBlocsDansPiece, rotationInverse) {
+      //s'il n'y a pas de bonne valeur de rotation, on retourne false
+      if (valeurRotation == undefined) {
+        return false;
+      }
+      //faire des tableaux temporaires
+      var tableauJeuTemp = JSON.parse(JSON.stringify(this.tableauJeu));
+      var laFormeTemp = JSON.parse(JSON.stringify(this.laForme));
+  
+      //pour chaque bloc qui effectue une rotation, on lui ajoute sa nouvelle valeur dans le tableau temporaire
+      for (var i = 0; i < nbBlocsDansPiece; i++) {
+        laFormeTemp[i][0] -= valeurRotation[rotationInverse][0][i];
+        laFormeTemp[i][1] -= valeurRotation[rotationInverse][1][i];
+  
+        //si un des blocss touche à la dernière rangée, on retourne false
+        if (laFormeTemp[i][0] >= TetraBloc.NB_BLOCS_PAR_COLONNES) {
+          return false;
+        }
+        //si une collision est détecter ou que la rotation donne une mauvaise valeur, on retourne false
+        if (
+          tableauJeuTemp[laFormeTemp[i][0]][laFormeTemp[i][1]] > 10 ||
+          tableauJeuTemp[laFormeTemp[i][0]][laFormeTemp[i][1]] == undefined
+        ) {
+          return false;
+        }
+      }
+      //si le test est bon on retourne true
+      return true;
+    },
 
   //objet qui contient les valeurs de rotations pour chaque forme
   objetRotations: {
