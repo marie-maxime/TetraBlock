@@ -1,57 +1,67 @@
 <!DOCTYPE html>
 <html lang="fr">
-
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="author" content="Marie-Maxime Tanguay" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
     <title>TetraBloc!</title>
-    <!--Intégration des scripts-->
-    <script src="vendor/phaser.min.js"></script>
-    <script src="src/AnimEtoile.js"></script>
-    <script src="src/ExplosionPoint.js"></script>
-    <script src="src/TetraBloc.js"></script>
-    <script src="src/Demarrage.js"></script>
-    <script src="src/ChargementMedias.js"></script>
-    <script src="src/IntroJeu.js"></script>
-    <script src="src/EcranInstruction.js"></script>
-    <script src="src/EcranJeu.js"></script>
-    <script src="src/EcranFinJeu.js"></script>
 
     <style type="text/css">
-        body {
-            padding: 0px;
-            margin: 0px;
-            background: #e7baf7;
-        }
+      body {
+        padding: 0px;
+        margin: 0px;
+        background: #e7baf7;
+      }
 
-        #orientation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url(medias/img/mettrePortrait.png);
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-color: #7d40af;
-            display: none;
-        }
+      #orientation {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url(medias/img/mettrePortrait.png);
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-color: #7d40af;
+        display: none;
+      }
     </style>
-</head>
 
-<body>
+    <!--Intégration des scripts-->
+    <script defer src="vendor/phaser.min.js"></script>
+    <script defer src="src/AnimEtoile.js"></script>
+    <script defer src="src/ExplosionPoint.js"></script>
+    <script defer src="src/TetraBloc.js"></script>
+    <script defer src="src/Demarrage.js"></script>
+    <script defer src="src/ChargementMedias.js"></script>
+    <script defer src="src/IntroJeu.js"></script>
+    <script defer src="src/EcranInstruction.js"></script>
+    <script defer src="src/EcranJeu.js"></script>
+    <script defer src="src/EcranFinJeu.js"></script>
+  </head>
+
+  <body>
     <div id="orientation"></div>
     <script type="text/javascript">
-        document.addEventListener('deviceready', function() {
-            window.setTimeout(function() {
-                if (navigator.splashscreen) {
-                    navigator.splashscreen.hide();
-                }
-            }, 5000, false);
-        }, false);
+      document.addEventListener(
+        "deviceready",
+        function () {
+          window.setTimeout(
+            function () {
+              if (navigator.splashscreen) {
+                navigator.splashscreen.hide();
+              }
+            },
+            5000,
+            false
+          );
+        },
+        false
+      );
     </script>
-</body>
-
+  </body>
 </html>
