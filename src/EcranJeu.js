@@ -89,8 +89,6 @@ TetraBloc.Jeu.prototype = {
     this.etatRotation = 0;
     //Enregistrer que le chronomètre n'est pas activé
     this.blocActif = true; //Un booléen pour gérer quand un bloc est actif
-    //la valeur du temps écoulé
-    this.leTemps = 0;
     //l'intervale avant le prochain mouvement
     this.freqTemp = 0.07;
     //temps que la prochaine action peut être executé
@@ -183,11 +181,12 @@ TetraBloc.Jeu.prototype = {
     this.laMusique.play();
   },
 
+  clamp: function(val, min, max) {
+    return val > max ? max : val < min ? min : val;
+  },
+
   //fonction update de phaser
   update: function () {
-    //le nombre de seconde depuis le début du jeu
-    this.leTemps = this.game.time.totalElapsedSeconds();
-
     //s'il y a un bloc actif, on peut le déplacer
     if (this.blocActif) {
       //bouger à gauche
@@ -286,39 +285,42 @@ TetraBloc.Jeu.prototype = {
   bougerGauche: function () {
     //si le test de collision est true et qu'un mouvement n'as pas été effectué dans l'intervale donné
     let timing = this.DAS[this.gaucheDAS];
-    this.gaucheDAS = Math.min(Math.max(this.gaucheDAS + 1, 0), 2);
+    let leTemps = this.game.time.totalElapsedSeconds();
+
     if (
       this.testerCollision(0, -1) &&
-      this.leTemps > this.prochaineAction + (((Phaser.Timer.SECOND / this.TARGET_FRAME) * timing) / 1000)
+      leTemps > this.prochaineAction + (((Phaser.Timer.SECOND / this.TARGET_FRAME) * timing) / 1000)
     ) {
+      this.gaucheDAS = this.clamp(this.gaucheDAS + 1, 0, 2);
       this.jouerSonClique();
       //actualiser les blocs
       this.actualiserBloc(false, true, false, true);
       //incrementer l'intervale
-      this.prochaineAction = this.game.time.totalElapsedSeconds();
+      this.prochaineAction = leTemps;
     }
   },
   //fonction pour bouger à droite
   bougerDroite: function () {
     //si le test de collision est true et qu'un mouvement n'as pas été effectué dans l'intervale donné
     let timing = this.DAS[this.droiteDAS];
-    this.droiteDAS = Math.min(Math.max(this.droiteDAS + 1, 0), 2);
+    let leTemps = this.game.time.totalElapsedSeconds();
     
     if (
       this.testerCollision(9, 1) &&
-      this.leTemps > this.prochaineAction + (((Phaser.Timer.SECOND / this.TARGET_FRAME) * timing) / 1000)
+      leTemps > this.prochaineAction + (((Phaser.Timer.SECOND / this.TARGET_FRAME) * timing) / 1000)
     ) {
+      this.droiteDAS = this.clamp(this.droiteDAS + 1, 0, 2);
       this.jouerSonClique();
       //actualiser les blocs
       this.actualiserBloc(false, false, true, true);
       //incrementer l'intervale
-      this.prochaineAction = this.game.time.totalElapsedSeconds();
+      this.prochaineAction = leTemps;
     }
   },
   //fonction pour bouger vers le bas
   bougerBas: function () {
     //si un mouvement n'as pas été effectué dans l'intervale donné
-    if (this.leTemps > this.prochaineAction + this.freqTemp) {
+    if (this.game.time.totalElapsedSeconds() > this.prochaineAction + this.freqTemp) {
       this.jouerSonClique();
       //faire tomber le bloc
       this.faireTomberBloc();
