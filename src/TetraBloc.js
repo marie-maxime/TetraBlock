@@ -24,6 +24,8 @@ TetraBloc = {
     moyen: 1,
     minimum: 1,
   },
+  ruleset: {},
+  niveauDepart: 1,
 };
 
 //On créera le jeu quand la page HTML sera chargée

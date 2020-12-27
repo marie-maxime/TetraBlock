@@ -7,6 +7,8 @@
  * pour la scène d'instruction du jeu
  */
 
+import { classique } from './ruletset';
+
 var TetraBloc = window.TetraBloc;
 
 TetraBloc.Instruction = function Instruction(leJeu) {
@@ -22,6 +24,9 @@ TetraBloc.Instruction.prototype = {
   },
 
   create: function () {
+    var niveauFacile = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    var niveauDifficile = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+
     //s'assurer que le fond d'écran est de la bonne couleur
     document.body.style.backgroundColor = "#e7baf7";
     //ajouter le fond d'écran
@@ -47,17 +52,8 @@ TetraBloc.Instruction.prototype = {
     );
     titreTxt.anchor.set(0.5, 0);
     //et son animation
-    var animTitre = this.game.add.tween(titreTxt.scale).to(
-      {
-        x: 1.25,
-        y: 1.1,
-      },
-      10000,
-      Phaser.Easing.None,
-      true,
-      0,
-      -1,
-      true
+   this.game.add.tween(titreTxt.scale).to({x: 1.25, y: 1.1},
+      10000, Phaser.Easing.None, true, 0, -1, true
     );
 
     //Le texte
@@ -98,8 +94,8 @@ TetraBloc.Instruction.prototype = {
     //afficher le texte de choix de mode
     var titreMode = this.game.add.text(
       this.game.width / 2,
-      this.game.height / 2,
-      "Choisir votre mode",
+      this.game.height / 1.9,
+      "Choisir votre niveau",
       {
         font: laPolice3,
         fill: "white",
@@ -111,6 +107,30 @@ TetraBloc.Instruction.prototype = {
     var laPolice4 =
       Math.round(22 * TetraBloc.RATIO_ECRAN.moyen) + "px Monospace";
 
+
+    niveauFacile.forEach((lvl, index) => {          
+      let text = this.game.add.text(
+        25 + (index * 60),
+        this.game.height / 1.68, lvl, {
+        font: laPolice4,
+        fill: "#FFF",
+      });
+      text.inputEnabled = true;
+      text.events.onInputDown.add(() => this.jouerClassique(lvl), this);
+    });
+
+    niveauDifficile.forEach((lvl, index) => {          
+      let text = this.game.add.text(
+        25 + (index * 60),
+        this.game.height / 1.5, lvl, {
+          font: laPolice4,
+          fill: "#FFF",
+      });
+      text.inputEnabled = true;
+      text.events.onInputDown.add(() => this.jouerClassique(lvl), this);
+    });
+
+    /*
     //afficher les boutons de choix de mode
     var boutonRapide = this.game.add.button(
       this.game.width / 2,
@@ -198,24 +218,14 @@ TetraBloc.Instruction.prototype = {
       }
     );
     instructionMode.anchor.set(0.5);
-  },
-  //pour jouer une partie rapide de 3min
-  jouerRapide: function () {
-    TetraBloc.mode = 0;
-    //Aller à l'écran de jeu
-    this.jouer();
-  },
-  //pour jouer au mode survie où il faut survivre 15 niveaux
-  jouerSurvie: function () {
-    TetraBloc.mode = 1;
-    //Aller à l'écran de jeu
-    this.jouer();
+    */
   },
 
-  //pour joueur au mode extrème
-  jouerExtreme: function () {
-    TetraBloc.mode = 2;
-    //Aller à l'écran de jeu
+  jouerClassique: function (niveauDepart) {
+    console.log(niveauDepart);
+    TetraBloc.ruleset = classique;
+    TetraBloc.niveauDepart = parseInt(niveauDepart);
+    TetraBloc.mode = 1;
     this.jouer();
   },
   //commencer le jeu
