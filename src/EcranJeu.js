@@ -89,7 +89,7 @@ TetraBloc.Jeu.prototype = {
     //Enregistrer que le chronomètre n'est pas activé
     this.blocActif = true; //Un booléen pour gérer quand un bloc est actif
     //l'intervale avant le prochain mouvement
-    this.freqTemp = (((Phaser.Timer.SECOND / this.TARGET_FRAME) * 1) / 1000)
+    this.freqTemp = (((Phaser.Timer.SECOND / this.TARGET_FRAME) * 2) / 1000)
     //temps que la prochaine action peut être executé
     this.prochaineAction = 0;
     //tableau de sprites des blocs
@@ -110,9 +110,9 @@ TetraBloc.Jeu.prototype = {
 
   create: function () {
     //Gestion des flèches et touches du clavier
-    this.toucheRotation = this.game.input.keyboard.addKey(Phaser.Keyboard.Z);
+    this.toucheRotation = this.game.input.keyboard.addKey(Phaser.Keyboard.X);
     this.toucheRotationInverse = this.game.input.keyboard.addKey(
-      Phaser.Keyboard.X
+      Phaser.Keyboard.Z
     );
     this.touchePause = this.game.input.keyboard.addKey(Phaser.Keyboard.P);
     this.toucheMettreEnReserve = this.game.input.keyboard.addKey(
@@ -208,7 +208,9 @@ TetraBloc.Jeu.prototype = {
       }
       //bouger vers le bas
       if (this.lesFleches.down.isDown && !this.desactiveMouvementBas) {
-        this.bougerBas();
+        if (this.niveau < 29) {
+          this.bougerBas();
+        }
       }
     }
     //faire une rotation en appuyant sur la touche Z
@@ -318,15 +320,16 @@ TetraBloc.Jeu.prototype = {
   },
   //fonction pour bouger vers le bas
   bougerBas: function () {
+    let leTemps = this.game.time.totalElapsedSeconds();
     //si un mouvement n'as pas été effectué dans l'intervale donné
-    if (this.game.time.totalElapsedSeconds() > this.prochaineAction + this.freqTemp) {
+    if (leTemps > this.prochaineAction + this.freqTemp) {
       // this.jouerSonClique();
       //faire tomber le bloc
       this.faireTomberBloc();
       this.score += 1;
       this.scoreTxt.text = "Score: " + this.score;
       //incrementer l'intervale
-      this.prochaineAction = this.game.time.totalElapsedSeconds();
+      this.prochaineAction = leTemps;
     }
   },
   //fonction pour jouer le son de clique en bougeant la pièce (mobile seulement);
