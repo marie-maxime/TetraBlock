@@ -222,7 +222,6 @@ TetraBloc.Instruction.prototype = {
   },
 
   jouerClassique: function (niveauDepart) {
-    console.log(niveauDepart);
     TetraBloc.ruleset = classique;
     TetraBloc.niveauDepart = parseInt(niveauDepart);
     TetraBloc.mode = 1;

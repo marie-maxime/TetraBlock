@@ -40,7 +40,6 @@ TetraBloc.Jeu.prototype = {
 
     this.ruleset = TetraBloc.ruleset;
 
-    this.niveauDAS = 0;
     this.gaucheDAS = 0;
     this.droiteDAS = 0;
   
@@ -90,7 +89,7 @@ TetraBloc.Jeu.prototype = {
     //Enregistrer que le chronomètre n'est pas activé
     this.blocActif = true; //Un booléen pour gérer quand un bloc est actif
     //l'intervale avant le prochain mouvement
-    this.freqTemp = 0.07;
+    this.freqTemp = (((Phaser.Timer.SECOND / this.TARGET_FRAME) * 1) / 1000)
     //temps que la prochaine action peut être executé
     this.prochaineAction = 0;
     //tableau de sprites des blocs
@@ -321,7 +320,7 @@ TetraBloc.Jeu.prototype = {
   bougerBas: function () {
     //si un mouvement n'as pas été effectué dans l'intervale donné
     if (this.game.time.totalElapsedSeconds() > this.prochaineAction + this.freqTemp) {
-      this.jouerSonClique();
+      // this.jouerSonClique();
       //faire tomber le bloc
       this.faireTomberBloc();
       this.score += 1;
@@ -613,7 +612,13 @@ TetraBloc.Jeu.prototype = {
         this.desactiveMouvementBas = false;
         this.laBoucleTemps = this.game.time.events.loop(
           (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.vitesse,
-          this.faireTomberBloc,
+          () => {
+            if (this.lesFleches.down.isDown) {
+              return;
+            }
+            
+            this.faireTomberBloc();
+          },
           this
         );
       }, (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.initialDropDelay);
@@ -621,7 +626,13 @@ TetraBloc.Jeu.prototype = {
       this.desactiveMouvementBas = false;
       this.laBoucleTemps = this.game.time.events.loop(
         (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.vitesse,
-        this.faireTomberBloc,
+        () => {
+          if (this.lesFleches.down.isDown) {
+            return;
+          }
+          
+          this.faireTomberBloc();
+        },
         this
       );
     }
