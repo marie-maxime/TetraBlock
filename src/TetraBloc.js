@@ -11,7 +11,7 @@ TetraBloc = {
   TAILLE_IMG: 36,
   NB_LIGNES: 15,
   NB_BLOCS_PAR_PIECE: 4,
-  LIGNE_DE_DEPART: 3,
+  LIGNE_DE_DEPART: 4,
   INFO: {
     auteure: "Marie-Maxime Tanguay",
     version: "1.1.0",
@@ -24,6 +24,8 @@ TetraBloc = {
     moyen: 1,
     minimum: 1,
   },
+  ruleset: {},
+  niveauDepart: 1,
 };
 
 //On créera le jeu quand la page HTML sera chargée
