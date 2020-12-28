@@ -36,8 +36,6 @@ TetraBloc.Jeu.prototype = {
 
     this.estFini = false;
     this.resumeBougerBas = true;
-    this.waitForNextBlock = null;
-    this.waitForNextDrop = null;
 
     this.ruleset = TetraBloc.ruleset;
 
@@ -48,7 +46,7 @@ TetraBloc.Jeu.prototype = {
     this.dropDelay = 18;
     this.nombreDeDescente = 0;
 
-    this.prochainForceBas =((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.initialDropDelay) / 1000;
+    this.prochainForceBas = ((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.initialDropDelay) / 1000;
 
     this.desactiveMouvementBas = true;
 
@@ -187,6 +185,9 @@ TetraBloc.Jeu.prototype = {
 
     //on met la pièce en réserve quand on appuie sur SHIFT
     this.toucheMettreEnReserve.onDown.add(this.mettreEnReserve, this);
+
+    //on met le jeu sur pause quand on appuie sur la touche P
+    this.touchePause.onDown.add(this.mettreSurPause, this);
   },
 
   clamp: function(val, min, max) {
@@ -227,6 +228,7 @@ TetraBloc.Jeu.prototype = {
       if (this.lesFleches.down.isDown && !this.desactiveMouvementBas && this.resumeBougerBas) {
         if (this.niveau < 29) {
           this.bougerBas(leTemps, mouvement);
+          this.prochainForceBas = leTemps;
         }
       } else if (
         !this.desactiveMouvementBas && 
@@ -941,8 +943,6 @@ TetraBloc.Jeu.prototype = {
   //fonction de la fin du jeu
   finJeu: function () {
     this.estFini = true;
-    window.clearTimeout(this.waitForNextBlock);
-    window.clearTimeout(this.waitForNextDrop);
     this.laMusique.stop();
     this.game.state.start("ecranFinJeu", true, false, this.score);
   },
@@ -981,15 +981,13 @@ TetraBloc.Jeu.prototype = {
     //le bloc n'est plus actif
     this.blocActif = false;
 
-    //réinitie le drop delay
-    this.dropDelay = 18;
-
     //vérifier la matrice du jeu
     this.verifierMatriceJeu();
 
     //si la fonction réserve a été utilisé et qu'il y a une pièce en réserve
+    let utiliserReserve = utiliseReserve && this.laPieceMettreEnJeu != null;
     this.blocActif = true;
-    this.creerUnBloc();
+    this.creerUnBloc(utiliserReserve);
     //réinitialiser le nombre de ligne détruite d'un coup
     this.nbLignesDetruitesDunCoup = 0;
     if (!utiliseReserve) {
@@ -997,46 +995,44 @@ TetraBloc.Jeu.prototype = {
     }
   },
 
+  getExtraDropDelay: function(inactifRange) {
+    if (inactifRange > 21 ) return 10;
+    if (inactifRange > 17 ) return 12;
+    if (inactifRange > 13 ) return 14;
+    if (inactifRange > 9 ) return 16;
+    return 18;
+  },
+
   verifierCollisionSol: function (){
-    if (
-      this.laForme[0][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
-      this.laForme[3][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
-      this.laForme[2][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
-      this.laForme[1][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1
-    ) {
+
+    for (var i = 0; i < 4; i++) {
+      if (
+        (this.laForme[i][0] == TetraBloc.NB_BLOCS_PAR_COLONNES - 1 ) ||
+        (this.tableauJeu[this.laForme[i][0] + 1][this.laForme[i][1]] > 10 && this.etatPiece < 10)
+      ) {
+        this.etatPiece = parseInt(this.etatPiece) + 10;
+        break;
+      }
+    }
+
+    //si l'état de la pièce a changé
+    if (this.etatPiece > 10) {
+      let inactifRange = TetraBloc.NB_BLOCS_PAR_COLONNES;
+
       for (var i = 0; i < 4; i++) {
-        //si le bloc en dessous est un bloc inactif, on rend les blocs actuelles inactif
-        if (
-          this.tableauJeu[this.laForme[i][0] + 1][this.laForme[i][1]] > 10 &&
-          this.etatPiece < 10
-        ) {
-          this.etatPiece = parseInt("1" + "" + this.etatPiece);
-        }
+        inactifRange = Math.min(this.laForme[i][0], inactifRange)
+        //on met la nouvelle valeur de la pièce à sa position
+        this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = this.etatPiece;
       }
-      //si l'état de la pièce a changé
-      if (this.etatPiece > 10) {
-        for (var i = 0; i < 4; i++) {
-          //on met la nouvelle valeur de la pièce à sa position
-          this.tableauJeu[this.laForme[i][0]][
-            this.laForme[i][1]
-          ] = this.etatPiece;
-        }
-        //on désactive le bloc
-        this.desactiverBloc();
-        //on sort de la fonction
-        return false;
-      }
-      return true;
-    } else {
-      for (var i = 0; i < 4; i++) {
-        //si le bloc touche la dernière changé, on change son état pour inactif
-        this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] =
-          this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] + 10;
-      }
+        
+      this.dropDelay = this.getExtraDropDelay(inactifRange);
+
       //on désactive le bloc
       this.desactiverBloc();
+      //on sort de la fonction
       return false;
     }
+    return true;
   },
 
   //fonction pour actualiser le bloc lorsqu'il bouge
@@ -1056,7 +1052,6 @@ TetraBloc.Jeu.prototype = {
 
       if (!fail) {
         this.nombreDeDescente += 1;
-        this.dropDelay
         for (var i = 0; i < 4; i++) {
           //on enlève les blocs de leur position actuelle de la matrice
           this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = 0;
@@ -1260,8 +1255,6 @@ TetraBloc.Jeu.prototype = {
   //fonction pour mettre une pièce en réserve
   mettreEnReserve: function () {
     if (this.blocActif) {
-      window.clearTimeout(this.waitForNextBlock);
-      window.clearTimeout(this.waitForNextDrop);
       //on fait jouer le son clique
       this.game.add.audio("clique").play();
       //si la fonction n'a pas encore été utilisé dans ce cycle

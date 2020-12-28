@@ -26,14 +26,14 @@
   },
   "staticFiles": {
     "staticPath": [
-        {
-          "staticPath": "vendor",
-          "staticOutDir": "vendor"
+      {
+        "staticPath": "vendor",
+        "staticOutDir": "vendor"
       },
       {
         "staticPath": "medias",
         "staticOutDir": "medias"
-    }
+      }
     ]
   }
 }
