@@ -39,7 +39,8 @@ export const classique = {
     if (niveauDepart !== niveauCourant) {
       return 10;
     }
-    const condition1 = (niveauCourant * 10 + 10);
+
+    const condition1 = niveauCourant * 10 + 10;
     const condition2 = Math.max(100, niveauCourant * 10 - 50);
     return condition1 < condition2 ? condition1 : condition2;
   }, 

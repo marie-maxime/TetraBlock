@@ -35,6 +35,7 @@ TetraBloc.Jeu.prototype = {
   init: function () {
 
     this.estFini = false;
+    this.resumeBougerBas = true;
     this.waitForNextBlock = null;
     this.waitForNextDrop = null;
 
@@ -44,7 +45,11 @@ TetraBloc.Jeu.prototype = {
     this.droiteDAS = 0;
   
     this.initialDropDelay = 38;
-    this.dropDelay = 0;
+    this.dropDelay = 18;
+    this.nombreDeDescente = 0;
+
+    this.prochainForceBas =((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.initialDropDelay) / 1000;
+
     this.desactiveMouvementBas = true;
 
     //s'il y a un niveau limite pour la partie en cours
@@ -73,9 +78,6 @@ TetraBloc.Jeu.prototype = {
     this.nbLignesDetruitesDunCoup = 0;
     //le nombre de ligne détruite au total
     this.nbLignesDetruitesTotal = 0;
-
-    //boucle de temps qui appel la fonction de faire descendre les blocs
-    this.laBoucleTemps = null;
     //Initaliser le temps
     this.tempsEcoule = 0;
     //initaliser le this.niveau
@@ -178,6 +180,13 @@ TetraBloc.Jeu.prototype = {
     //jouer la musique
     this.laMusique.loop = true;
     this.laMusique.play();
+
+    //faire une rotation en appuyant sur la touche Z
+    this.toucheRotation.onDown.add(this.faireRotation, this);
+    this.toucheRotationInverse.onDown.add(this.faireRotationInverse, this);
+
+    //on met la pièce en réserve quand on appuie sur SHIFT
+    this.toucheMettreEnReserve.onDown.add(this.mettreEnReserve, this);
   },
 
   clamp: function(val, min, max) {
@@ -188,14 +197,22 @@ TetraBloc.Jeu.prototype = {
   update: function () {
     //s'il y a un bloc actif, on peut le déplacer
     if (this.blocActif) {
-      //bouger à gauche
 
+      let mouvement = {
+        gauche: false,
+        droite: false,
+        bas: false,
+      }
+
+      let leTemps = this.game.time.totalElapsedSeconds();
+      
+      //bouger à gauche
       if (this.lesFleches.left.isUp) {
         this.gaucheDAS = 0;
       }
 
       if (this.lesFleches.left.isDown) {
-        this.bougerGauche();
+        this.bougerGauche(leTemps, mouvement);
       }
 
       if (this.lesFleches.right.isUp) {
@@ -204,24 +221,33 @@ TetraBloc.Jeu.prototype = {
 
       //bouger à droite
       if (this.lesFleches.right.isDown) {
-        this.bougerDroite();
+        this.bougerDroite(leTemps, mouvement);
       }
       //bouger vers le bas
-      if (this.lesFleches.down.isDown && !this.desactiveMouvementBas) {
+      if (this.lesFleches.down.isDown && !this.desactiveMouvementBas && this.resumeBougerBas) {
         if (this.niveau < 29) {
-          this.bougerBas();
+          this.bougerBas(leTemps, mouvement);
         }
+      } else if (
+        !this.desactiveMouvementBas && 
+        (leTemps > this.prochainForceBas + (((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.vitesse) / 1000))
+      ) {
+        let verif = this.verifierCollisionSol();
+        this.prochainForceBas = leTemps;
+        
+        if (verif) {
+          mouvement.bas = true;
+        } 
+      }
+
+      if (this.lesFleches.down.isUp) {
+        this.resumeBougerBas = true;
+      }
+
+      if (mouvement.gauche || mouvement.droite || mouvement.bas) {
+        this.actualiserBloc(mouvement.bas, mouvement.gauche, mouvement.droite);
       }
     }
-    //faire une rotation en appuyant sur la touche Z
-    this.toucheRotation.onDown.add(this.faireRotation, this);
-    this.toucheRotationInverse.onDown.add(this.faireRotationInverse, this);
-
-    //on met la pièce en réserve quand on appuie sur SHIFT
-    this.toucheMettreEnReserve.onDown.add(this.mettreEnReserve, this);
-
-    //on met le jeu sur pause quand on appuie sur la touche P
-    this.touchePause.onDown.add(this.mettreSurPause, this);
   },
 
   //fonction pour mettre le jeu sur pause
@@ -283,10 +309,9 @@ TetraBloc.Jeu.prototype = {
   },
 
   //fonction pour bouger à gauche
-  bougerGauche: function () {
+  bougerGauche: function (leTemps, mouvement) {
     //si le test de collision est true et qu'un mouvement n'as pas été effectué dans l'intervale donné
     let timing = this.DAS[this.gaucheDAS];
-    let leTemps = this.game.time.totalElapsedSeconds();
 
     if (
       this.testerCollision(0, -1) &&
@@ -295,16 +320,16 @@ TetraBloc.Jeu.prototype = {
       this.gaucheDAS = this.clamp(this.gaucheDAS + 1, 0, 2);
       this.jouerSonClique();
       //actualiser les blocs
-      this.actualiserBloc(false, true, false, true);
+      mouvement.gauche = true;
+      mouvement.droite = false;
       //incrementer l'intervale
       this.prochaineAction = leTemps;
     }
   },
   //fonction pour bouger à droite
-  bougerDroite: function () {
+  bougerDroite: function (leTemps, mouvement) {
     //si le test de collision est true et qu'un mouvement n'as pas été effectué dans l'intervale donné
     let timing = this.DAS[this.droiteDAS];
-    let leTemps = this.game.time.totalElapsedSeconds();
     
     if (
       this.testerCollision(9, 1) &&
@@ -313,21 +338,25 @@ TetraBloc.Jeu.prototype = {
       this.droiteDAS = this.clamp(this.droiteDAS + 1, 0, 2);
       this.jouerSonClique();
       //actualiser les blocs
-      this.actualiserBloc(false, false, true, true);
+      mouvement.droite = true;
+      mouvement.gauche = false;
       //incrementer l'intervale
       this.prochaineAction = leTemps;
     }
   },
   //fonction pour bouger vers le bas
-  bougerBas: function () {
-    let leTemps = this.game.time.totalElapsedSeconds();
+  bougerBas: function (leTemps, mouvement) {
     //si un mouvement n'as pas été effectué dans l'intervale donné
     if (leTemps > this.prochaineAction + this.freqTemp) {
       // this.jouerSonClique();
       //faire tomber le bloc
-      this.faireTomberBloc();
-      this.score += 1;
-      this.scoreTxt.text = "Score: " + this.score;
+      let verif = this.verifierCollisionSol();
+
+      if (verif) {
+        this.score += 1;
+        this.scoreTxt.text = "Score: " + this.score;
+        mouvement.bas = true;
+      }
       //incrementer l'intervale
       this.prochaineAction = leTemps;
     }
@@ -568,6 +597,7 @@ TetraBloc.Jeu.prototype = {
     //variable de la forme
     var nbFormeChoisi;
 
+    this.nombreDeDescente = 0;
     //si on utilise pas une pièce en réserve
 
     if (!utiliserReserve) {
@@ -607,43 +637,17 @@ TetraBloc.Jeu.prototype = {
         this.laProchaineForme[i][1] - position
       ] = this.laProchainePiece;
     }
-    //on met un listener sur la pièce pour qu'elle tombe
-
-    if (this.initialDropDelay !== 0) {
-      this.waitForNextDrop = window.setTimeout(() => {
-        this.initialDropDelay = 0;
-        this.desactiveMouvementBas = false;
-        this.laBoucleTemps = this.game.time.events.loop(
-          (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.vitesse,
-          () => {
-            if (this.lesFleches.down.isDown) {
-              return;
-            }
-            
-            this.faireTomberBloc();
-          },
-          this
-        );
-      }, (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.initialDropDelay);
-    } else {
-      this.desactiveMouvementBas = false;
-      this.laBoucleTemps = this.game.time.events.loop(
-        (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.vitesse,
-        () => {
-          if (this.lesFleches.down.isDown) {
-            return;
-          }
-          
-          this.faireTomberBloc();
-        },
-        this
-      );
-    }
-
     //on met à jour les sprites
     this.actualiserSprite();
     //on met à jour la matrice de la prochaine pièce
     this.actualiserSprite(true, false, 4, 4);
+
+    this.desactiveMouvementBas = true;
+    this.resumeBougerBas = false;
+    
+    window.setTimeout(() => {
+      this.desactiveMouvementBas = false;
+    }, ((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.dropDelay))
   },
 
   //fonction pour assigner une forme selon le chiffre dans la matrice
@@ -939,7 +943,6 @@ TetraBloc.Jeu.prototype = {
     this.estFini = true;
     window.clearTimeout(this.waitForNextBlock);
     window.clearTimeout(this.waitForNextDrop);
-    this.game.time.events.remove(this.laBoucleTemps);
     this.laMusique.stop();
     this.game.state.start("ecranFinJeu", true, false, this.score);
   },
@@ -973,37 +976,20 @@ TetraBloc.Jeu.prototype = {
 
   //fonction pour desactiver le bloc qui tombe
   desactiverBloc: function (utiliseReserve) {
-    //on enlève le listener
-    this.game.time.events.remove(this.laBoucleTemps);
     //réinitie la rotation
     this.etatRotation = 0;
     //le bloc n'est plus actif
     this.blocActif = false;
 
     //réinitie le drop delay
-    this.dropDelay = 10;
+    this.dropDelay = 18;
 
     //vérifier la matrice du jeu
     this.verifierMatriceJeu();
 
     //si la fonction réserve a été utilisé et qu'il y a une pièce en réserve
-    if (utiliseReserve && this.laPieceMettreEnJeu != null) {      
-      //créer un nouveau bloc avec la pièce en reserve
-
-      this.blocActif = true;
-      this.creerUnBloc(true);
-      //on crée un nouveau bloc
-    } else {
-      this.desactiveMouvementBas = true;
-      this.waitForNextBlock = window.setTimeout(() => {
-        if(this.estFini) {
-          return;
-        }
-
-        this.blocActif = true;
-        this.creerUnBloc();
-      }, (Phaser.Timer.SECOND / this.TARGET_FRAME) * this.dropDelay);
-    }
+    this.blocActif = true;
+    this.creerUnBloc();
     //réinitialiser le nombre de ligne détruite d'un coup
     this.nbLignesDetruitesDunCoup = 0;
     if (!utiliseReserve) {
@@ -1011,70 +997,107 @@ TetraBloc.Jeu.prototype = {
     }
   },
 
-  //fonction pour controler la descente des blocs
-  faireTomberBloc: function () {
-    //si le bloc est actif
-    if (this.blocActif) {
-      //si le bloc ne touche pas la dernière rangée
-      if (
-        this.laForme[0][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
-        this.laForme[3][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
-        this.laForme[2][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
-        this.laForme[1][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1
-      ) {
-        for (var i = 0; i < 4; i++) {
-          //si le bloc en dessous est un bloc inactif, on rend les blocs actuelles inactif
-          if (
-            this.tableauJeu[this.laForme[i][0] + 1][this.laForme[i][1]] > 10 &&
-            this.etatPiece < 10
-          ) {
-            this.etatPiece = parseInt("1" + "" + this.etatPiece);
-          }
+  verifierCollisionSol: function (){
+    if (
+      this.laForme[0][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
+      this.laForme[3][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
+      this.laForme[2][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1 &&
+      this.laForme[1][0] != TetraBloc.NB_BLOCS_PAR_COLONNES - 1
+    ) {
+      for (var i = 0; i < 4; i++) {
+        //si le bloc en dessous est un bloc inactif, on rend les blocs actuelles inactif
+        if (
+          this.tableauJeu[this.laForme[i][0] + 1][this.laForme[i][1]] > 10 &&
+          this.etatPiece < 10
+        ) {
+          this.etatPiece = parseInt("1" + "" + this.etatPiece);
         }
-        //si l'état de la pièce a changé
-        if (this.etatPiece > 10) {
-          for (var i = 0; i < 4; i++) {
-            //on met la nouvelle valeur de la pièce à sa position
-            this.tableauJeu[this.laForme[i][0]][
-              this.laForme[i][1]
-            ] = this.etatPiece;
-          }
-          //on désactive le bloc
-          this.desactiverBloc();
-          //on sort de la fonction
-          return;
-        }
-        //sinon, la pièce tombe et on actualise sa position
-        this.actualiserBloc(true, false, false, true);
-      } else {
+      }
+      //si l'état de la pièce a changé
+      if (this.etatPiece > 10) {
         for (var i = 0; i < 4; i++) {
-          //si le bloc touche la dernière changé, on change son état pour inactif
-          this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] =
-            this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] + 10;
+          //on met la nouvelle valeur de la pièce à sa position
+          this.tableauJeu[this.laForme[i][0]][
+            this.laForme[i][1]
+          ] = this.etatPiece;
         }
         //on désactive le bloc
         this.desactiverBloc();
+        //on sort de la fonction
+        return false;
       }
+      return true;
+    } else {
+      for (var i = 0; i < 4; i++) {
+        //si le bloc touche la dernière changé, on change son état pour inactif
+        this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] =
+          this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] + 10;
+      }
+      //on désactive le bloc
+      this.desactiverBloc();
+      return false;
     }
   },
 
   //fonction pour actualiser le bloc lorsqu'il bouge
   actualiserBloc: function (faireTomber, faireBougerGauche, faireBougerDroite) {
-    for (var i = 0; i < 4; i++) {
-      //on enlève les blocs de leur position actuelle de la matrice
-      this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = 0;
 
-      //incrémentation de 1 selon la modification à appliquer
-      if (faireTomber) {
-        this.laForme[i][0] += 1;
+    if (faireTomber) {
+      let fail = false
+      for (var i = 0; i < 4; i++) {
+
+        if (
+          this.tableauJeu[this.laForme[i][0] + 1][this.laForme[i][1]] > 10 &&
+          this.etatPiece < 10
+        ) {
+          fail = true;
+        }
       }
-      if (faireBougerDroite) {
-        this.laForme[i][1] += 1;
-      }
-      if (faireBougerGauche) {
-        this.laForme[i][1] -= 1;
+
+      if (!fail) {
+        this.nombreDeDescente += 1;
+        this.dropDelay
+        for (var i = 0; i < 4; i++) {
+          //on enlève les blocs de leur position actuelle de la matrice
+          this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = 0;
+          //incrémentation de 1 selon la modification à appliquer
+          this.laForme[i][0] += 1;
+        }
       }
     }
+
+    if (faireBougerDroite) {
+      let fail = false;
+      for (var i = 0; i < 4; i++) {
+        if (this.testerCollision(9, 1) === false) {
+          fail = true;
+        }        
+      }
+
+      if (!fail) {
+        for (var i = 0; i < 4; i++) {
+          this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = 0;
+          this.laForme[i][1] += 1;
+        }
+      }
+    }
+
+    if (faireBougerGauche) {
+      let fail = false;
+      for (var i = 0; i < 4; i++) {
+        if (this.testerCollision(0, -1) === false) {
+          fail = true;
+        }        
+      }
+
+      if (!fail) {
+        for (var i = 0; i < 4; i++) {
+          this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = 0;
+          this.laForme[i][1] -= 1;
+        }
+      }
+    }
+
     for (var i = 0; i < 4; i++) {
       //on met la valeur des blocs à leur nouvelle position dans la matrice
       this.tableauJeu[this.laForme[i][0]][this.laForme[i][1]] = this.etatPiece;
