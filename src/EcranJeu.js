@@ -643,13 +643,8 @@ TetraBloc.Jeu.prototype = {
     this.actualiserSprite();
     //on met à jour la matrice de la prochaine pièce
     this.actualiserSprite(true, false, 4, 4);
-
-    this.desactiveMouvementBas = true;
     this.resumeBougerBas = false;
-    
-    window.setTimeout(() => {
-      this.desactiveMouvementBas = false;
-    }, ((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.dropDelay))
+    this.desactiveMouvementBas = false;
   },
 
   //fonction pour assigner une forme selon le chiffre dans la matrice
@@ -705,18 +700,18 @@ TetraBloc.Jeu.prototype = {
         //forme du L
         uneForme = [
           [4, 4],
+          [4, 6],
           [5, 4],
-          [5, 6],
-          [5, 5],
+          [4, 5],
         ];
         break;
       case 7:
         //forme du J (L inversé)
         uneForme = [
-          [5, 4],
           [5, 6],
+          [4, 4],
           [4, 6],
-          [5, 5],
+          [4, 5],
         ];
         break;
     }
@@ -980,19 +975,20 @@ TetraBloc.Jeu.prototype = {
     this.etatRotation = 0;
     //le bloc n'est plus actif
     this.blocActif = false;
-
+    
     //vérifier la matrice du jeu
     this.verifierMatriceJeu();
-
-    //si la fonction réserve a été utilisé et qu'il y a une pièce en réserve
-    let utiliserReserve = utiliseReserve && this.laPieceMettreEnJeu != null;
-    this.blocActif = true;
-    this.creerUnBloc(utiliserReserve);
-    //réinitialiser le nombre de ligne détruite d'un coup
-    this.nbLignesDetruitesDunCoup = 0;
-    if (!utiliseReserve) {
-      this.reserveUtilise = false;
-    }
+    window.setTimeout(() => {
+      //si la fonction réserve a été utilisé et qu'il y a une pièce en réserve
+      let utiliserReserve = utiliseReserve && this.laPieceMettreEnJeu != null;
+      this.blocActif = true;
+      this.creerUnBloc(utiliserReserve);
+      //réinitialiser le nombre de ligne détruite d'un coup
+      this.nbLignesDetruitesDunCoup = 0;
+      if (!utiliseReserve) {
+        this.reserveUtilise = false;
+      }
+    }, ((Phaser.Timer.SECOND / this.TARGET_FRAME) * this.dropDelay))
   },
 
   getExtraDropDelay: function(inactifRange) {
@@ -1431,40 +1427,40 @@ TetraBloc.Jeu.prototype = {
         [-1, -1, 0],
       ],
     },
-    6: {
+    7: {
       0: [
-        [0, 1, -1],
-        [2, 1, -1],
+        [0, -1, 1],
+        [-2, 1, -1],
       ],
       1: [
-        [2, -1, 1],
-        [0, 1, -1],
+        [-2, 1, -1],
+        [0, 1,-1],
       ],
       2: [
         [0, 1, -1],
-        [-2, -1, 1],
+        [2, -1, 1],
       ],
       3: [
-        [-2, -1, 1],
+        [2, -1, 1],
         [0, -1, 1],
       ],
     },
-    7: {
+    6: {
       0: [
-        [-1, 1, 2],
+        [-1, 1, -2],
         [1, -1, 0],
       ],
       1: [
         [1, -1, 0],
-        [1, -1, -2],
+        [1, -1, 2],
       ],
       2: [
-        [1, -1, -2],
+        [1, -1, 2],
         [-1, 1, 0],
       ],
       3: [
         [-1, 1, 0],
-        [-1, 1, 2],
+        [-1, 1, -2],
       ],
     },
     //retourne les données de la rotation
